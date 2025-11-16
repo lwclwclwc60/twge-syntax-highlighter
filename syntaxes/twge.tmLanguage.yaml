@@ -11,7 +11,7 @@ repository:
   keywords:
     patterns:
     - name: keyword.twge
-      match: "\\b(def|block|checks|actions|triggers|if|else|true|false|const)\\b"
+      match: "\\b(def|block|checks|actions|triggers|if|else|true|false|const|for|in)\\b"
     - name: keyword.builtin.twge
       match: "\\b(Point|ActorMatch|CustomWeapon)\\b"
   strings:
