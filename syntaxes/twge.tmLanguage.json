@@ -27,7 +27,7 @@
         },
         {
           "name": "keyword.builtin.twge",
-          "match": "\\b(Point|ActorMatch|CustomWeapon)\\b"
+          "match": "\\b(Point|ActorMatch|Button|CustomWeapon)\\b"
         }
       ]
     },
