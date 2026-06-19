@@ -28,6 +28,10 @@
         {
           "name": "keyword.builtin.twge",
           "match": "\\b(Point|ActorMatch|Button|CustomWeapon)\\b"
+        },
+        {
+          "name": "support.function.builtin.twge",
+          "match": "\\btwge::(to_string|to_int|to_bool|get_index|get_length|get_slice|assert)\\b"
         }
       ]
     },
@@ -50,14 +54,20 @@
           "name": "comment.line.double-slash.twge",
           "begin": "//",
           "end": "$"
+        },
+        {
+          "name": "comment.block.twge",
+          "begin": "/\\*",
+          "end": "\\*/"
         }
       ]
     },
     "metadatas": {
       "patterns": [
         {
-          "name": "keyword.twge",
-          "match": "__([\\w]+)__"
+          "name": "metadata.twge",
+          "begin": "__",
+          "end": "__"
         }
       ]
     }

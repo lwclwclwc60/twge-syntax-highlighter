@@ -14,6 +14,8 @@ repository:
       match: "\\b(def|block|checks|actions|triggers|if|else|true|false|const|for|in)\\b"
     - name: keyword.builtin.twge
       match: "\\b(Point|ActorMatch|Button|CustomWeapon)\\b"
+    - name: support.function.builtin.twge
+      match: "\\btwge::(to_string|to_int|to_bool|get_index|get_length|get_slice|assert)\\b"
   strings:
     name: string.quoted.double.twge
     begin: "\""
@@ -27,6 +29,9 @@ repository:
     - name: comment.line.double-slash.twge
       begin: "//"
       end: "$"
+    - name: comment.block.twge
+      begin: "/\\*"
+      end: "\\*/"
   metadatas:
     patterns:
     - name: metadata.twge
