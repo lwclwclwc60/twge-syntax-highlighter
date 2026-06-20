@@ -92,7 +92,7 @@ const builtinStructDefs: BuiltinStructDef[] = [
     supportsNamedArgs: true,
     params: [
       { name: 'id', type: 'string' },
-      { name: 'label', type: 'string' },
+      { name: 'text', type: 'string' },
     ],
   },
   {
@@ -1696,7 +1696,7 @@ function defaultValueForType(type: string): string {
   }
 
   if (type === 'Button') {
-    return 'Button(id = "", label = "")';
+    return 'Button(id = "", text = "")';
   }
 
   if (type === 'CustomWeapon') {
