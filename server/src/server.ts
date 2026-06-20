@@ -29,14 +29,29 @@ type KeywordDoc = {
   docs: string;
 };
 
-type BlockFunctionDef = {
+type FunctionBodyKind = 'block' | 'actions' | 'checks' | 'triggers';
+
+type FunctionDef = {
   name: string;
   params: string[];
+  bodyKind: FunctionBodyKind;
 };
 
 type StructParamDef = {
   name: string;
   type: string;
+};
+
+type InstructionParamDef = {
+  name: string;
+  type: string;
+};
+
+type InstructionDef = {
+  scope: Exclude<FunctionBodyKind, 'block'>;
+  name: string;
+  zh: string;
+  params: InstructionParamDef[];
 };
 
 type BuiltinStructDef = {
@@ -101,6 +116,558 @@ const builtinStructDefs: BuiltinStructDef[] = [
 
 const builtinStructMap = new Map(builtinStructDefs.map((item) => [item.name, item]));
 
+const instructionDefs: InstructionDef[] = [
+  {
+    scope: 'actions',
+    name: 'actorAttributes',
+    zh: '設定角色屬性',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'attr', type: 'string' },
+      { name: 'value', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'actorDisappear',
+    zh: '角色消失',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'delay', type: 'int|string' },
+      { name: 'duration', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'actorFollow',
+    zh: '跟隨人物',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'targetId', type: 'string' },
+      { name: 'type', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'actorRelocate',
+    zh: '移動角色位置',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'keepAbility', type: 'bool' },
+      { name: 'x', type: 'int|string' },
+      { name: 'y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'actorSpawnLoc',
+    zh: '角色重生位置',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'x', type: 'int|string' },
+      { name: 'y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'actorTalk',
+    zh: '角色說話',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'cleanTalk', type: 'bool' },
+      { name: 'duration', type: 'int|string' },
+      { name: 'text', type: 'string' },
+      { name: 'wait', type: 'bool' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'addActor',
+    zh: '新增角色',
+    params: [
+      { name: 'camp', type: 'string' },
+      { name: 'externRole', type: 'string' },
+      { name: 'hp', type: 'int|string' },
+      { name: 'id', type: 'string' },
+      { name: 'localVarname', type: 'string' },
+      { name: 'movableRange', type: 'int|string' },
+      { name: 'name', type: 'string' },
+      { name: 'patrol', type: 'list[Point]' },
+      { name: 'range', type: 'int|string' },
+      { name: 'role', type: 'string' },
+      { name: 'rotation', type: 'int|string' },
+      { name: 'strength', type: 'int|string' },
+      { name: 'teamId', type: 'int|string' },
+      { name: 'weapon1', type: 'string' },
+      { name: 'weapon2', type: 'string' },
+      { name: 'x', type: 'int|string' },
+      { name: 'y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'addDropItem',
+    zh: '新增放置可拾取道具',
+    params: [
+      { name: 'itemCode', type: 'string' },
+      { name: 'localVarname', type: 'string' },
+      { name: 'range', type: 'int|string' },
+      { name: 'scale', type: 'int|string' },
+      { name: 'type', type: 'string' },
+      { name: 'x', type: 'int|string' },
+      { name: 'y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'addMapObject',
+    zh: '新增地圖物件',
+    params: [
+      { name: 'autoTuneHeight', type: 'bool' },
+      { name: 'object', type: 'string' },
+      { name: 'range', type: 'int|string' },
+      { name: 'walkable', type: 'bool' },
+      { name: 'x', type: 'int|string' },
+      { name: 'y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'addMapSign',
+    zh: '新增告示牌',
+    params: [
+      { name: 'buttons', type: 'list[Button]' },
+      { name: 'range', type: 'int|string' },
+      { name: 'rotation', type: 'int|string' },
+      { name: 'showButtons', type: 'bool' },
+      { name: 'text', type: 'string' },
+      { name: 'x', type: 'int|string' },
+      { name: 'y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'addStuff',
+    zh: '新增武器道具',
+    params: [
+      { name: 'code', type: 'string' },
+      { name: 'item', type: 'string' },
+      { name: 'range', type: 'int|string' },
+      { name: 'refill', type: 'bool' },
+      { name: 'refillInterval', type: 'int|string' },
+      { name: 'rotation', type: 'int|string' },
+      { name: 'x', type: 'int|string' },
+      { name: 'y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'avoidFriendFire',
+    zh: '迴避友軍攻擊',
+    params: [{ name: 'value', type: 'bool' }],
+  },
+  {
+    scope: 'actions',
+    name: 'deltaHp',
+    zh: '角色加減血',
+    params: [
+      { name: 'actorCode', type: 'string' },
+      { name: 'casterCode', type: 'string' },
+      { name: 'type', type: 'string' },
+      { name: 'value', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'enblastEffect',
+    zh: '光彈特效',
+    params: [
+      { name: 'damage', type: 'int|string' },
+      { name: 'fromActor', type: 'string' },
+      { name: 'fromType', type: 'string' },
+      { name: 'scale', type: 'int|string' },
+      { name: 'speed', type: 'int|string' },
+      { name: 'toAngle', type: 'int|string' },
+      { name: 'toType', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'equipWeapon',
+    zh: '人物裝備武器',
+    params: [
+      { name: 'actorCode', type: 'string' },
+      { name: 'hand', type: 'int|string' },
+      { name: 'isDefault', type: 'bool' },
+      { name: 'type', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'getCookie',
+    zh: '取得Cookies',
+    params: [
+      { name: 'cookies', type: 'string' },
+      { name: 'varName', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'getUserState',
+    zh: '取得玩家狀態',
+    params: [
+      { name: 'category', type: 'string' },
+      { name: 'key', type: 'string' },
+      { name: 'playerId', type: 'string' },
+      { name: 'varName', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'mapWarp',
+    zh: '設定地圖傳送點',
+    params: [
+      { name: 'direction', type: 'string' },
+      { name: 'fromX', type: 'int|string' },
+      { name: 'fromY', type: 'int|string' },
+      { name: 'toX', type: 'int|string' },
+      { name: 'toY', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'missionComplete',
+    zh: '任務完成',
+    params: [{ name: 'camp', type: 'string' }],
+  },
+  {
+    scope: 'actions',
+    name: 'longBo',
+    zh: '龍波',
+    params: [{ name: 'actorCode', type: 'string' }],
+  },
+  {
+    scope: 'actions',
+    name: 'print',
+    zh: '控制台輸出',
+    params: [
+      { name: 'text', type: 'string' },
+      { name: 'type', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'removeDevice',
+    zh: '移除地圖機關',
+    params: [
+      { name: 'region_h', type: 'int|string' },
+      { name: 'region_w', type: 'int|string' },
+      { name: 'region_x', type: 'int|string' },
+      { name: 'region_y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'removeMapObject',
+    zh: '移除地圖物件',
+    params: [
+      { name: 'region_h', type: 'int|string' },
+      { name: 'region_w', type: 'int|string' },
+      { name: 'region_x', type: 'int|string' },
+      { name: 'region_y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'setCookie',
+    zh: '儲存Cookies',
+    params: [
+      { name: 'cookies', type: 'string' },
+      { name: 'playerId', type: 'string' },
+      { name: 'type', type: 'string' },
+      { name: 'value', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'setGlobal',
+    zh: '儲存全域變數',
+    params: [
+      { name: 'key', type: 'string' },
+      { name: 'type', type: 'string' },
+      { name: 'value', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'setObjectVar',
+    zh: '儲存物件變數',
+    params: [
+      { name: 'key', type: 'string' },
+      { name: 'object', type: 'string' },
+      { name: 'type', type: 'string' },
+      { name: 'value', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'setUserState',
+    zh: '儲存玩家狀態',
+    params: [
+      { name: 'category', type: 'string' },
+      { name: 'key', type: 'string' },
+      { name: 'playerId', type: 'string' },
+      { name: 'type', type: 'string' },
+      { name: 'value', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'setWeaponAbility',
+    zh: '設定武器技能',
+    params: [
+      { name: 'ability', type: 'string' },
+      { name: 'level', type: 'int|string' },
+      { name: 'operation', type: 'string' },
+      { name: 'weapon', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'showSelectDialog',
+    zh: '彈出選項視窗',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'message', type: 'string' },
+      { name: 'options', type: 'list[Button]' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'tipOnMap',
+    zh: '地圖標示文字',
+    params: [
+      { name: 'duration', type: 'int|string' },
+      { name: 'html', type: 'bool' },
+      { name: 'text', type: 'string' },
+      { name: 'x', type: 'int|string' },
+      { name: 'y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'wait',
+    zh: '等待',
+    params: [{ name: 'duration', type: 'int|string' }],
+  },
+  {
+    scope: 'actions',
+    name: 'EnhFF::playerMousePosition',
+    zh: 'EnhFF::玩家滑鼠座標',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'varX', type: 'string' },
+      { name: 'varY', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
+    name: 'EnhFF::generalCircularRange',
+    zh: 'EnhFF::廣義圓形範圍',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'color', type: 'string' },
+      { name: 'deltaHpCD', type: 'int|string' },
+      { name: 'deltaHpCasterCode', type: 'string' },
+      { name: 'deltaHpTarget', type: 'ActorMatch' },
+      { name: 'deltaHpType', type: 'string' },
+      { name: 'deltaHpValue', type: 'int|string' },
+      { name: 'duration', type: 'int|string' },
+      { name: 'lineWidth', type: 'int|string' },
+      { name: 'offsetX', type: 'int|string' },
+      { name: 'offsetY', type: 'int|string' },
+      { name: 'radius', type: 'int|string' },
+      { name: 'x', type: 'int|string' },
+      { name: 'y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'checks',
+    name: 'actorCount',
+    zh: '計算人數',
+    params: [
+      { name: 'actor', type: 'ActorMatch' },
+      { name: 'op', type: 'string' },
+      { name: 'region_h', type: 'int|string' },
+      { name: 'region_w', type: 'int|string' },
+      { name: 'region_x', type: 'int|string' },
+      { name: 'region_y', type: 'int|string' },
+      { name: 'value', type: 'int|string' },
+      { name: 'varname', type: 'string' },
+    ],
+  },
+  {
+    scope: 'checks',
+    name: 'actorRegion',
+    zh: '角色所在區域',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'checkAlive', type: 'bool' },
+      { name: 'region_h', type: 'int|string' },
+      { name: 'region_w', type: 'int|string' },
+      { name: 'region_x', type: 'int|string' },
+      { name: 'region_y', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'checks',
+    name: 'checkNumber',
+    zh: '比較數字',
+    params: [
+      { name: 'lhs', type: 'int|string' },
+      { name: 'op', type: 'string' },
+      { name: 'rhs', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'checks',
+    name: 'checkString',
+    zh: '比對字串',
+    params: [
+      { name: 'matchKind', type: 'string' },
+      { name: 'str', type: 'string' },
+      { name: 'value', type: 'string' },
+    ],
+  },
+  {
+    scope: 'checks',
+    name: 'forEachActor',
+    zh: '找出所有角色',
+    params: [
+      { name: 'actor', type: 'ActorMatch' },
+      { name: 'varname', type: 'string' },
+    ],
+  },
+  {
+    scope: 'triggers',
+    name: 'actorAdded',
+    zh: '角色進入戰場',
+    params: [
+      { name: 'actor', type: 'ActorMatch' },
+      { name: 'varName', type: 'string' },
+    ],
+  },
+  {
+    scope: 'triggers',
+    name: 'actorDead',
+    zh: '角色死亡',
+    params: [
+      { name: 'actor', type: 'ActorMatch' },
+      { name: 'hitterVarName', type: 'string' },
+      { name: 'varName', type: 'string' },
+    ],
+  },
+  {
+    scope: 'triggers',
+    name: 'actorFire',
+    zh: '角色發動攻擊',
+    params: [
+      { name: 'actor', type: 'ActorMatch' },
+      { name: 'varName', type: 'string' },
+      { name: 'weapon', type: 'string' },
+    ],
+  },
+  {
+    scope: 'triggers',
+    name: 'actorHit',
+    zh: '角色受傷',
+    params: [
+      { name: 'actor', type: 'ActorMatch' },
+      { name: 'actorVarName', type: 'string' },
+      { name: 'damageValueVarName', type: 'string' },
+      { name: 'hitter', type: 'ActorMatch' },
+      { name: 'hitterVarName', type: 'string' },
+      { name: 'weapon', type: 'string' },
+    ],
+  },
+  {
+    scope: 'triggers',
+    name: 'clickButton',
+    zh: '告示牌按鈕',
+    params: [
+      { name: 'actor', type: 'ActorMatch' },
+      { name: 'buttonId', type: 'string' },
+      { name: 'varName', type: 'string' },
+    ],
+  },
+  {
+    scope: 'triggers',
+    name: 'dialogConfirm',
+    zh: '視窗確認',
+    params: [
+      { name: 'buttonName', type: 'string' },
+      { name: 'playerLocalId', type: 'string' },
+    ],
+  },
+  {
+    scope: 'triggers',
+    name: 'keyboardPressed',
+    zh: '鍵盤按鍵',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'key', type: 'string' },
+      { name: 'timing', type: 'string' },
+      { name: 'varName', type: 'string' },
+    ],
+  },
+  {
+    scope: 'triggers',
+    name: 'itemPickup',
+    zh: '拾取武器道具',
+    params: [
+      { name: 'actor', type: 'ActorMatch' },
+      { name: 'actorVarname', type: 'string' },
+      { name: 'itemMatchCode', type: 'string' },
+      { name: 'itemVarname', type: 'string' },
+      { name: 'matchKind', type: 'string' },
+    ],
+  },
+  {
+    scope: 'triggers',
+    name: 'mouseEvent',
+    zh: '滑鼠點擊',
+    params: [
+      { name: 'XVarName', type: 'string' },
+      { name: 'YVarName', type: 'string' },
+      { name: 'actorId', type: 'string' },
+      { name: 'actorVarName', type: 'string' },
+    ],
+  },
+  {
+    scope: 'triggers',
+    name: 'releasePower',
+    zh: '發動技能',
+    params: [
+      { name: 'ability', type: 'string' },
+      { name: 'actor', type: 'ActorMatch' },
+      { name: 'manaUsage', type: 'int|string' },
+      { name: 'preventDefault', type: 'bool' },
+      { name: 'varName', type: 'string' },
+      { name: 'weapon', type: 'string' },
+    ],
+  },
+];
+
+const instructionByScope = new Map<Exclude<FunctionBodyKind, 'block'>, InstructionDef[]>([
+  ['actions', instructionDefs.filter((item) => item.scope === 'actions')],
+  ['checks', instructionDefs.filter((item) => item.scope === 'checks')],
+  ['triggers', instructionDefs.filter((item) => item.scope === 'triggers')],
+]);
+
+const instructionByScopeAndName = new Map<string, InstructionDef>(
+  instructionDefs.map((item) => [`${item.scope}::${item.name}`, item])
+);
+
 const keywordDocs: KeywordDoc[] = [
   { label: 'block', detail: 'TWGE block declaration', docs: 'Declare a game event block.' },
   { label: 'actions', detail: 'TWGE action body type', docs: 'Function body type for action statements.' },
@@ -162,6 +729,22 @@ const snippetCompletions: CompletionItem[] = [
     documentation: 'Actions function definition snippet.',
   },
   {
+    label: 'snippet:def checks',
+    kind: CompletionItemKind.Snippet,
+    detail: 'Create a checks function definition',
+    insertTextFormat: InsertTextFormat.Snippet,
+    insertText: 'def ${1:name}(${2:params}): checks {\n\t$0\n}',
+    documentation: 'Checks function definition snippet.',
+  },
+  {
+    label: 'snippet:def triggers',
+    kind: CompletionItemKind.Snippet,
+    detail: 'Create a triggers function definition',
+    insertTextFormat: InsertTextFormat.Snippet,
+    insertText: 'def ${1:name}(${2:params}): triggers {\n\t$0\n}',
+    documentation: 'Triggers function definition snippet.',
+  },
+  {
     label: 'snippet:const',
     kind: CompletionItemKind.Snippet,
     detail: 'Create a const declaration',
@@ -184,7 +767,7 @@ connection.onInitialize((_params: InitializeParams): InitializeResult => {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       completionProvider: {
-        triggerCharacters: ['(', ','],
+        triggerCharacters: ['(', ',', ';', '{'],
         resolveProvider: false,
       },
       signatureHelpProvider: {
@@ -228,12 +811,18 @@ connection.onCompletion((params): CompletionItem[] => {
     return [...baseCompletions, ...snippetCompletions];
   }
 
-  const functionDefs = parseBlockFunctionDefs(document.getText());
+  const functionDefs = parseFunctionDefs(document.getText());
 
   const line = document.getText({
     start: { line: params.position.line, character: 0 },
     end: params.position,
   });
+  const textBeforeCursor = document.getText({
+    start: { line: 0, character: 0 },
+    end: params.position,
+  });
+  const instructionScope = getInstructionScope(textBeforeCursor);
+
   const blockAssignmentCompletions = getBlockAssignmentCompletions(line, functionDefs);
   if (blockAssignmentCompletions.length > 0) {
     return [...blockAssignmentCompletions, ...baseCompletions];
@@ -241,9 +830,29 @@ connection.onCompletion((params): CompletionItem[] => {
 
   const callContext = getFunctionCallContext(line);
   if (callContext) {
+    if (instructionScope) {
+      const instructionParamCompletions = getInstructionParamCompletions(callContext, instructionScope);
+      if (instructionParamCompletions.length > 0) {
+        return [...instructionParamCompletions, ...baseCompletions];
+      }
+    }
+
+    const functionParamCompletions = getUserFunctionParamCompletions(callContext, functionDefs);
+    if (functionParamCompletions.length > 0) {
+      return [...functionParamCompletions, ...baseCompletions];
+    }
+
     const builtinParamCompletions = getBuiltinStructParamCompletions(callContext);
     if (builtinParamCompletions.length > 0) {
       return [...builtinParamCompletions, ...baseCompletions];
+    }
+  }
+
+  if (instructionScope) {
+    const instructionCompletions = getInstructionNameCompletions(instructionScope);
+    const hasTypedInstructionPrefix = /[A-Za-z_\u0080-\uFFFF:][\w:\u0080-\uFFFF]*$/.test(line);
+    if (hasTypedInstructionPrefix || shouldOfferInstructionListAtCursor(textBeforeCursor, line)) {
+      return [...instructionCompletions, ...baseCompletions];
     }
   }
 
@@ -261,15 +870,20 @@ connection.onSignatureHelp((params): SignatureHelp | null => {
     return null;
   }
 
-  const functionDefs = parseBlockFunctionDefs(document.getText());
+  const functionDefs = parseFunctionDefs(document.getText());
   const line = document.getText({
     start: { line: params.position.line, character: 0 },
     end: params.position,
   });
+  const textBeforeCursor = document.getText({
+    start: { line: 0, character: 0 },
+    end: params.position,
+  });
+  const instructionScope = getInstructionScope(textBeforeCursor);
 
   const callContext = getBlockAssignmentCallContext(line);
   if (callContext) {
-    const fn = functionDefs.find((item) => item.name === callContext.name);
+    const fn = functionDefs.find((item) => item.name === callContext.name && item.bodyKind === 'block');
     if (fn) {
       const parameters = fn.params.map((param) => ParameterInformation.create(param));
       const signatureLabel = `${fn.name}(${fn.params.join(', ')})`;
@@ -286,6 +900,52 @@ connection.onSignatureHelp((params): SignatureHelp | null => {
   const genericCall = getFunctionCallContext(line);
   if (!genericCall) {
     return null;
+  }
+
+  if (instructionScope) {
+    const instruction = instructionByScopeAndName.get(`${instructionScope}::${genericCall.name}`);
+    if (instruction) {
+      const parameters = instruction.params.map((param) =>
+        ParameterInformation.create(`${param.name}: ${param.type}`)
+      );
+      const signatureLabel = `${instruction.name}(${instruction.params
+        .map((param) => `${param.name}: ${param.type}`)
+        .join(', ')})`;
+      const signature = SignatureInformation.create(
+        signatureLabel,
+        `${instruction.scope} instruction: ${instruction.zh}`,
+        ...parameters
+      );
+
+      return {
+        signatures: [signature],
+        activeSignature: 0,
+        activeParameter: Math.min(
+          genericCall.activeParameter,
+          Math.max(0, instruction.params.length - 1)
+        ),
+      };
+    }
+  }
+
+  const userFunction = functionDefs.find((item) => item.name === genericCall.name);
+  if (userFunction) {
+    const parameters = userFunction.params.map((param) => ParameterInformation.create(param));
+    const signatureLabel = `${userFunction.name}(${userFunction.params.join(', ')})`;
+    const signature = SignatureInformation.create(
+      signatureLabel,
+      `User-defined TWGE ${userFunction.bodyKind} function.`,
+      ...parameters
+    );
+
+    return {
+      signatures: [signature],
+      activeSignature: 0,
+      activeParameter: Math.min(
+        genericCall.activeParameter,
+        Math.max(0, userFunction.params.length - 1)
+      ),
+    };
   }
 
   const builtinStruct = builtinStructMap.get(genericCall.name);
@@ -463,21 +1123,22 @@ function getWordRange(document: TextDocument, position: Position): Range | null 
   };
 }
 
-function parseBlockFunctionDefs(text: string): BlockFunctionDef[] {
-  const output: BlockFunctionDef[] = [];
+function parseFunctionDefs(text: string): FunctionDef[] {
+  const output: FunctionDef[] = [];
   const seen = new Set<string>();
-  const defRegex = /^\s*def\s+([^\s(]+)\s*\(([^)]*)\)\s*:\s*block\b/gm;
+  const defRegex = /^\s*def\s+([^\s(]+)\s*\(([^)]*)\)\s*:\s*(block|actions|checks|triggers)\b/gm;
 
   let match: RegExpExecArray | null = defRegex.exec(text);
   while (match) {
     const name = match[1].trim();
     const paramsRaw = match[2].trim();
+    const bodyKind = match[3].trim() as FunctionBodyKind;
     const params = paramsRaw.length === 0
       ? []
       : paramsRaw.split(',').map((item) => item.trim()).filter((item) => item.length > 0);
 
     if (!seen.has(name)) {
-      output.push({ name, params });
+      output.push({ name, params, bodyKind });
       seen.add(name);
     }
 
@@ -487,7 +1148,7 @@ function parseBlockFunctionDefs(text: string): BlockFunctionDef[] {
   return output;
 }
 
-function getBlockAssignmentCompletions(linePrefix: string, defs: BlockFunctionDef[]): CompletionItem[] {
+function getBlockAssignmentCompletions(linePrefix: string, defs: FunctionDef[]): CompletionItem[] {
   const match = linePrefix.match(/^\s*block\s+[^\s=]+\s*=\s*([^\n]*)$/);
   if (!match) {
     return [];
@@ -498,6 +1159,7 @@ function getBlockAssignmentCompletions(linePrefix: string, defs: BlockFunctionDe
   const typedPrefix = typedPrefixMatch ? typedPrefixMatch[1] : '';
 
   return defs
+    .filter((item) => item.bodyKind === 'block')
     .filter((item) => typedPrefix.length === 0 || item.name.startsWith(typedPrefix))
     .map((item) => {
       const argsSnippet = item.params
@@ -637,6 +1299,201 @@ function getBuiltinStructParamCompletions(callContext: {
     }));
 }
 
+function getUserFunctionParamCompletions(
+  callContext: { name: string; activeParameter: number; argsText: string },
+  defs: FunctionDef[]
+): CompletionItem[] {
+  const def = defs.find((item) => item.name === callContext.name);
+  if (!def) {
+    return [];
+  }
+
+  return def.params
+    .filter((_param, index) => index >= callContext.activeParameter)
+    .map((param, idx) => {
+      const isLast = callContext.activeParameter + idx >= def.params.length - 1;
+      return {
+        label: param,
+        kind: CompletionItemKind.Variable,
+        detail: `${param} (parameter)`,
+        documentation: `Parameter for ${def.name} (${def.bodyKind}).`,
+        insertText: `\${1:${escapeSnippetValue(param)}}${isLast ? '' : ', '}`,
+        insertTextFormat: InsertTextFormat.Snippet,
+      };
+    });
+}
+
+function getInstructionNameCompletions(
+  scope: Exclude<FunctionBodyKind, 'block'>
+): CompletionItem[] {
+  const defs = instructionByScope.get(scope) ?? [];
+  return defs.map((item) => {
+    const argsSnippet = item.params
+      .map(
+        (param, index) => `${param.name} = \${${index + 1}:${defaultValueForType(param.type)}}`
+      )
+      .join(', ');
+
+    return {
+      label: item.name,
+      kind: CompletionItemKind.Function,
+      detail: `${scope} instruction | ${item.zh}`,
+      documentation: `${item.name}(${item.params
+        .map((param) => `${param.name}: ${param.type}`)
+        .join(', ')})`,
+      filterText: `${item.name} ${item.zh}`,
+      insertText: `${item.name}(${argsSnippet});`,
+      insertTextFormat: InsertTextFormat.Snippet,
+    };
+  });
+}
+
+function getInstructionParamCompletions(
+  callContext: { name: string; activeParameter: number; argsText: string },
+  scope: Exclude<FunctionBodyKind, 'block'>
+): CompletionItem[] {
+  const instruction = instructionByScopeAndName.get(`${scope}::${callContext.name}`);
+  if (!instruction) {
+    return [];
+  }
+
+  const hasNamedArg = /\b[A-Za-z_\u0080-\uFFFF][\w\u0080-\uFFFF]*\s*=/.test(callContext.argsText);
+  if (!hasNamedArg) {
+    return instruction.params
+      .filter((_param, index) => index >= callContext.activeParameter)
+      .map((param, idx) => {
+        const isLast = callContext.activeParameter + idx >= instruction.params.length - 1;
+        return {
+          label: param.name,
+          kind: CompletionItemKind.Field,
+          detail: `${param.name}: ${param.type}`,
+          documentation: `${instruction.name} parameter | ${instruction.zh}`,
+          insertText: `${param.name} = \${1:${defaultValueForType(param.type)}}${isLast ? '' : ', '}`,
+          insertTextFormat: InsertTextFormat.Snippet,
+        };
+      });
+  }
+
+  const usedNames = new Set<string>();
+  const namedArgRegex = /\b([A-Za-z_\u0080-\uFFFF][\w\u0080-\uFFFF]*)\s*=/g;
+  let namedMatch: RegExpExecArray | null = namedArgRegex.exec(callContext.argsText);
+  while (namedMatch) {
+    usedNames.add(namedMatch[1]);
+    namedMatch = namedArgRegex.exec(callContext.argsText);
+  }
+
+  const typedPrefixMatch = callContext.argsText.match(/([A-Za-z_\u0080-\uFFFF][\w\u0080-\uFFFF]*)?$/);
+  const typedPrefix = typedPrefixMatch?.[1] ?? '';
+
+  return instruction.params
+    .filter((param) => !usedNames.has(param.name))
+    .filter((param) => typedPrefix.length === 0 || param.name.startsWith(typedPrefix))
+    .map((param) => ({
+      label: param.name,
+      kind: CompletionItemKind.Field,
+      detail: `${param.name}: ${param.type}`,
+      documentation: `${instruction.name} parameter | ${instruction.zh}`,
+      insertText: `${param.name} = \${1:${defaultValueForType(param.type)}}`,
+      insertTextFormat: InsertTextFormat.Snippet,
+    }));
+}
+
+function getInstructionScope(textBeforeCursor: string): Exclude<FunctionBodyKind, 'block'> | null {
+  const stack: FunctionBodyKind[] = [];
+  let inString = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let i = 0; i < textBeforeCursor.length; i++) {
+    const c = textBeforeCursor[i];
+    const n = i + 1 < textBeforeCursor.length ? textBeforeCursor[i + 1] : '';
+
+    if (inLineComment) {
+      if (c === '\n') {
+        inLineComment = false;
+      }
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (c === '*' && n === '/') {
+        inBlockComment = false;
+        i += 1;
+      }
+      continue;
+    }
+
+    if (!inString && c === '/' && n === '/') {
+      inLineComment = true;
+      i += 1;
+      continue;
+    }
+
+    if (!inString && c === '/' && n === '*') {
+      inBlockComment = true;
+      i += 1;
+      continue;
+    }
+
+    if (c === '"') {
+      const prev = i > 0 ? textBeforeCursor[i - 1] : '';
+      if (prev !== '\\') {
+        inString = !inString;
+      }
+      continue;
+    }
+
+    if (inString) {
+      continue;
+    }
+
+    if (c === '{') {
+      const prefix = textBeforeCursor.slice(0, i);
+      const kindMatch = prefix.match(/:\s*(block|actions|checks|triggers)\s*$/);
+      if (kindMatch) {
+        stack.push(kindMatch[1] as FunctionBodyKind);
+      } else {
+        stack.push('block');
+      }
+      continue;
+    }
+
+    if (c === '}') {
+      if (stack.length > 0) {
+        stack.pop();
+      }
+    }
+  }
+
+  for (let i = stack.length - 1; i >= 0; i--) {
+    const kind = stack[i];
+    if (kind === 'actions' || kind === 'checks' || kind === 'triggers') {
+      return kind;
+    }
+  }
+
+  return null;
+}
+
+function shouldOfferInstructionListAtCursor(textBeforeCursor: string, linePrefix: string): boolean {
+  if (linePrefix.trim().length > 0) {
+    return false;
+  }
+
+  const beforeCurrentLine = textBeforeCursor.slice(0, textBeforeCursor.length - linePrefix.length);
+  let i = beforeCurrentLine.length - 1;
+  while (i >= 0 && /\s/.test(beforeCurrentLine[i])) {
+    i -= 1;
+  }
+
+  if (i < 0) {
+    return false;
+  }
+
+  const prevChar = beforeCurrentLine[i];
+  return prevChar === '{' || prevChar === ';';
+}
+
 function getActiveParameterIndex(argsText: string): number {
   let roundDepth = 0;
   let squareDepth = 0;
@@ -684,9 +1541,34 @@ function getActiveParameterIndex(argsText: string): number {
 }
 
 function defaultValueForType(type: string): string {
-  if (type === 'string') {
+  if (type.includes('string')) {
     return '""';
   }
+
+  if (type === 'bool') {
+    return 'false';
+  }
+
+  if (type.startsWith('list[')) {
+    return '[]';
+  }
+
+  if (type === 'Point') {
+    return 'Point(0, 0)';
+  }
+
+  if (type === 'ActorMatch') {
+    return 'ActorMatch(controller = "", id = "", matchKind = "", group = 0)';
+  }
+
+  if (type === 'Button') {
+    return 'Button(id = "", label = "")';
+  }
+
+  if (type === 'CustomWeapon') {
+    return 'CustomWeapon(reference = "", code = "")';
+  }
+
   return '0';
 }
 
