@@ -54,6 +54,14 @@ type InstructionDef = {
   params: InstructionParamDef[];
 };
 
+type MetadataScope = 'global' | 'block';
+
+type MetadataDef = {
+  scope: MetadataScope;
+  name: string;
+  type: string;
+};
+
 type BuiltinStructDef = {
   name: string;
   supportsNamedArgs: boolean;
@@ -664,9 +672,63 @@ const instructionByScope = new Map<Exclude<FunctionBodyKind, 'block'>, Instructi
   ['triggers', instructionDefs.filter((item) => item.scope === 'triggers')],
 ]);
 
-const instructionByScopeAndName = new Map<string, InstructionDef>(
-  instructionDefs.map((item) => [`${item.scope}::${item.name}`, item])
+const instructionByScopeAndAlias = new Map<string, InstructionDef>(
+  instructionDefs.flatMap((item) => [
+    [`${item.scope}::${item.name}`, item] as [string, InstructionDef],
+    [`${item.scope}::${item.zh}`, item] as [string, InstructionDef],
+  ])
 );
+
+const metadataDefs: MetadataDef[] = [
+  { scope: 'global', name: '__allowGuest__', type: 'bool' },
+  { scope: 'global', name: '__bornDuration__', type: 'int|string' },
+  { scope: 'global', name: '__bornLockDuration__', type: 'int|string' },
+  { scope: 'global', name: '__campOpRoyal__', type: 'bool' },
+  { scope: 'global', name: '__campOpSkydow__', type: 'bool' },
+  { scope: 'global', name: '__campOpThird__', type: 'bool' },
+  { scope: 'global', name: '__carryItemCodes__', type: 'list[string]' },
+  { scope: 'global', name: '__customWeapons__', type: 'CustomWeapon' },
+  { scope: 'global', name: '__defCarryItems__', type: 'bool' },
+  { scope: 'global', name: '__disableNextGameOnMissionComplete__', type: 'bool' },
+  { scope: 'global', name: '__gamezoneCode__', type: 'string' },
+  { scope: 'global', name: '__lives__', type: 'int|string' },
+  { scope: 'global', name: '__map__', type: 'string' },
+  { scope: 'global', name: '__maxAbilityLevel__', type: 'int|string' },
+  { scope: 'global', name: '__minPlayers__', type: 'int|string' },
+  { scope: 'global', name: '__mustLogin__', type: 'bool' },
+  { scope: 'global', name: '__nextGameEnabled__', type: 'bool' },
+  { scope: 'global', name: '__playDefaultMusic__', type: 'bool' },
+  { scope: 'global', name: '__preloadResourcesExclude__', type: 'list[string]' },
+  { scope: 'global', name: '__preloadSources__', type: 'list[string]' },
+  { scope: 'global', name: '__roomSize__', type: 'int|string' },
+  { scope: 'global', name: '__royalLocs__', type: 'list[Point]' },
+  { scope: 'global', name: '__runGame__', type: 'bool' },
+  { scope: 'global', name: '__schema__', type: 'string' },
+  { scope: 'global', name: '__setBornDuration__', type: 'bool' },
+  { scope: 'global', name: '__setInitFocus__', type: 'bool' },
+  { scope: 'global', name: '__skydowLocs__', type: 'list[Point]' },
+  { scope: 'global', name: '__stageBackgroundColor__', type: 'string' },
+  { scope: 'global', name: '__stageHeight__', type: 'int|string' },
+  { scope: 'global', name: '__stageWidth__', type: 'int|string' },
+  { scope: 'global', name: '__supportMsgServer__', type: 'bool' },
+  { scope: 'global', name: '__supportSignin__', type: 'bool' },
+  { scope: 'global', name: '__thirdLocs__', type: 'list[Point]' },
+  { scope: 'global', name: '__title__', type: 'string' },
+  { scope: 'global', name: '__useCustomFarWeapons__', type: 'bool' },
+  { scope: 'global', name: '__useCustomItems__', type: 'bool' },
+  { scope: 'global', name: '__useCustomWeapons__', type: 'bool' },
+  { scope: 'global', name: '__useDefaultCampLocs__', type: 'bool' },
+  { scope: 'global', name: '__useDefaultItems__', type: 'bool' },
+  { scope: 'block', name: '__delay__', type: 'int|string' },
+  { scope: 'block', name: '__label__', type: 'string' },
+  { scope: 'block', name: '__repeat__', type: 'int|string' },
+  { scope: 'block', name: '__repeatInterval__', type: 'int|string' },
+];
+
+const metadataByScope = new Map<MetadataScope, MetadataDef[]>([
+  ['global', metadataDefs.filter((item) => item.scope === 'global')],
+  ['block', metadataDefs.filter((item) => item.scope === 'block')],
+]);
 
 const keywordDocs: KeywordDoc[] = [
   { label: 'block', detail: 'TWGE block declaration', docs: 'Declare a game event block.' },
@@ -767,7 +829,7 @@ connection.onInitialize((_params: InitializeParams): InitializeResult => {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       completionProvider: {
-        triggerCharacters: ['(', ',', ';', '{'],
+        triggerCharacters: ['(', ',', ';', '{', '_'],
         resolveProvider: false,
       },
       signatureHelpProvider: {
@@ -821,7 +883,13 @@ connection.onCompletion((params): CompletionItem[] => {
     start: { line: 0, character: 0 },
     end: params.position,
   });
+  const metadataScope = getMetadataScope(textBeforeCursor);
   const instructionScope = getInstructionScope(textBeforeCursor);
+
+  const metadataCompletions = getMetadataCompletions(line, metadataScope);
+  if (metadataCompletions.length > 0) {
+    return [...metadataCompletions, ...baseCompletions];
+  }
 
   const blockAssignmentCompletions = getBlockAssignmentCompletions(line, functionDefs);
   if (blockAssignmentCompletions.length > 0) {
@@ -903,7 +971,7 @@ connection.onSignatureHelp((params): SignatureHelp | null => {
   }
 
   if (instructionScope) {
-    const instruction = instructionByScopeAndName.get(`${instructionScope}::${genericCall.name}`);
+    const instruction = getInstructionByAlias(instructionScope, genericCall.name);
     if (instruction) {
       const parameters = instruction.params.map((param) =>
         ParameterInformation.create(`${param.name}: ${param.type}`)
@@ -1327,24 +1395,38 @@ function getInstructionNameCompletions(
   scope: Exclude<FunctionBodyKind, 'block'>
 ): CompletionItem[] {
   const defs = instructionByScope.get(scope) ?? [];
-  return defs.map((item) => {
+  return defs.flatMap((item) => {
     const argsSnippet = item.params
       .map(
         (param, index) => `${param.name} = \${${index + 1}:${defaultValueForType(param.type)}}`
       )
       .join(', ');
 
-    return {
+    const enCompletion: CompletionItem = {
       label: item.name,
       kind: CompletionItemKind.Function,
       detail: `${scope} instruction | ${item.zh}`,
-      documentation: `${item.name}(${item.params
+      documentation: `${item.name} / ${item.zh}(${item.params
         .map((param) => `${param.name}: ${param.type}`)
         .join(', ')})`,
       filterText: `${item.name} ${item.zh}`,
       insertText: `${item.name}(${argsSnippet});`,
       insertTextFormat: InsertTextFormat.Snippet,
     };
+
+    const zhCompletion: CompletionItem = {
+      label: item.zh,
+      kind: CompletionItemKind.Function,
+      detail: `${scope} instruction | ${item.name}`,
+      documentation: `${item.zh} / ${item.name}(${item.params
+        .map((param) => `${param.name}: ${param.type}`)
+        .join(', ')})`,
+      filterText: `${item.zh} ${item.name}`,
+      insertText: `${item.zh}(${argsSnippet});`,
+      insertTextFormat: InsertTextFormat.Snippet,
+    };
+
+    return [enCompletion, zhCompletion];
   });
 }
 
@@ -1352,7 +1434,7 @@ function getInstructionParamCompletions(
   callContext: { name: string; activeParameter: number; argsText: string },
   scope: Exclude<FunctionBodyKind, 'block'>
 ): CompletionItem[] {
-  const instruction = instructionByScopeAndName.get(`${scope}::${callContext.name}`);
+  const instruction = getInstructionByAlias(scope, callContext.name);
   if (!instruction) {
     return [];
   }
@@ -1398,7 +1480,66 @@ function getInstructionParamCompletions(
     }));
 }
 
+function getInstructionByAlias(
+  scope: Exclude<FunctionBodyKind, 'block'>,
+  nameOrZh: string
+): InstructionDef | undefined {
+  return instructionByScopeAndAlias.get(`${scope}::${nameOrZh}`);
+}
+
 function getInstructionScope(textBeforeCursor: string): Exclude<FunctionBodyKind, 'block'> | null {
+  const stack = getScopeStack(textBeforeCursor);
+  for (let i = stack.length - 1; i >= 0; i--) {
+    const kind = stack[i];
+    if (kind === 'actions' || kind === 'checks' || kind === 'triggers') {
+      return kind;
+    }
+  }
+
+  return null;
+}
+
+function getMetadataScope(textBeforeCursor: string): MetadataScope | null {
+  const stack = getScopeStack(textBeforeCursor);
+  const hasInstructionSection = stack.some(
+    (kind) => kind === 'actions' || kind === 'checks' || kind === 'triggers'
+  );
+  if (hasInstructionSection) {
+    return null;
+  }
+
+  return stack.length === 0 ? 'global' : 'block';
+}
+
+function getMetadataCompletions(
+  linePrefix: string,
+  scope: MetadataScope | null
+): CompletionItem[] {
+  if (!scope) {
+    return [];
+  }
+
+  const match = linePrefix.match(/^\s*(_[A-Za-z0-9_]*)?\s*$/);
+  if (!match) {
+    return [];
+  }
+
+  const typedPrefix = match[1] ?? '';
+  const defs = metadataByScope.get(scope) ?? [];
+
+  return defs
+    .filter((item) => typedPrefix.length === 0 || item.name.startsWith(typedPrefix))
+    .map((item) => ({
+      label: item.name,
+      kind: CompletionItemKind.Property,
+      detail: `${scope} metadata: ${item.type}`,
+      documentation: `TWGE ${scope} metadata field`,
+      insertText: `${item.name} = \${1:${defaultValueForType(item.type)}};`,
+      insertTextFormat: InsertTextFormat.Snippet,
+    }));
+}
+
+function getScopeStack(textBeforeCursor: string): FunctionBodyKind[] {
   const stack: FunctionBodyKind[] = [];
   let inString = false;
   let inLineComment = false;
@@ -1449,7 +1590,7 @@ function getInstructionScope(textBeforeCursor: string): Exclude<FunctionBodyKind
 
     if (c === '{') {
       const prefix = textBeforeCursor.slice(0, i);
-      const kindMatch = prefix.match(/:\s*(block|actions|checks|triggers)\s*$/);
+      const kindMatch = prefix.match(/(?:^|[^\w:])(?::\s*)?(block|actions|checks|triggers)\s*$/);
       if (kindMatch) {
         stack.push(kindMatch[1] as FunctionBodyKind);
       } else {
@@ -1465,14 +1606,7 @@ function getInstructionScope(textBeforeCursor: string): Exclude<FunctionBodyKind
     }
   }
 
-  for (let i = stack.length - 1; i >= 0; i--) {
-    const kind = stack[i];
-    if (kind === 'actions' || kind === 'checks' || kind === 'triggers') {
-      return kind;
-    }
-  }
-
-  return null;
+  return stack;
 }
 
 function shouldOfferInstructionListAtCursor(textBeforeCursor: string, linePrefix: string): boolean {
