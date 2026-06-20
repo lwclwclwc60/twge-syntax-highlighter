@@ -276,6 +276,15 @@ const instructionDefs: InstructionDef[] = [
   },
   {
     scope: 'actions',
+    name: 'closeDialog',
+    zh: '關閉彈出視窗',
+    params: [
+      { name: 'actorId', type: 'string' },
+      { name: 'dialogId', type: 'string' },
+    ],
+  },
+  {
+    scope: 'actions',
     name: 'deltaHp',
     zh: '角色加減血',
     params: [
@@ -446,6 +455,7 @@ const instructionDefs: InstructionDef[] = [
     zh: '彈出選項視窗',
     params: [
       { name: 'actorId', type: 'string' },
+      { name: 'dialogId', type: 'string' },
       { name: 'message', type: 'string' },
       { name: 'options', type: 'list[Button]' },
     ],
@@ -614,6 +624,7 @@ const instructionDefs: InstructionDef[] = [
     zh: '視窗確認',
     params: [
       { name: 'buttonName', type: 'string' },
+      { name: 'dialogId', type: 'string' },
       { name: 'playerLocalId', type: 'string' },
     ],
   },
