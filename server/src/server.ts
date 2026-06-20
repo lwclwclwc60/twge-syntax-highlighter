@@ -228,6 +228,18 @@ const instructionDefs: InstructionDef[] = [
   },
   {
     scope: 'actions',
+    name: 'addManaCircle',
+    zh: '新增回氣魔法陣',
+    params: [
+      { name: 'x', type: 'int|string' },
+      { name: 'y', type: 'int|string' },
+      { name: 'heal', type: 'int|string' },
+      { name: 'healActorCooldown', type: 'int|string' },
+      { name: 'healDeviceCooldown', type: 'int|string' },
+    ],
+  },
+  {
+    scope: 'actions',
     name: 'addMapObject',
     zh: '新增地圖物件',
     params: [
