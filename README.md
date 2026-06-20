@@ -10,7 +10,7 @@ If you are using this extension inside the twgec workspace, install the prebuilt
 
 1. Open VS Code.
 2. Run `Extensions: Install from VSIX...`.
-3. Select `tool/bin/twge-syntax-highlighter-0.0.1.vsix`.
+3. Select the latest `tool/bin/twge-syntax-highlighter-<version>.vsix`.
 
 ### Build and package locally
 

@@ -5,6 +5,7 @@ import {
   DiagnosticSeverity,
   Hover,
   InsertTextFormat,
+  ParameterInformation,
   createConnection,
   InitializeParams,
   InitializeResult,
@@ -12,6 +13,8 @@ import {
   Position,
   ProposedFeatures,
   Range,
+  SignatureHelp,
+  SignatureInformation,
   TextDocumentSyncKind,
 } from 'vscode-languageserver/node';
 import { TextDocuments } from 'vscode-languageserver';
@@ -25,6 +28,78 @@ type KeywordDoc = {
   detail: string;
   docs: string;
 };
+
+type BlockFunctionDef = {
+  name: string;
+  params: string[];
+};
+
+type StructParamDef = {
+  name: string;
+  type: string;
+};
+
+type BuiltinStructDef = {
+  name: string;
+  supportsNamedArgs: boolean;
+  params: StructParamDef[];
+};
+
+const builtinStructDefs: BuiltinStructDef[] = [
+  {
+    name: 'Point',
+    supportsNamedArgs: false,
+    params: [
+      { name: 'x', type: 'int' },
+      { name: 'y', type: 'int' },
+    ],
+  },
+  {
+    name: 'ActorMatch',
+    supportsNamedArgs: true,
+    params: [
+      { name: 'controller', type: 'string' },
+      { name: 'id', type: 'string' },
+      { name: 'matchKind', type: 'string' },
+      { name: 'group', type: 'int' },
+    ],
+  },
+  {
+    name: 'Button',
+    supportsNamedArgs: true,
+    params: [
+      { name: 'id', type: 'string' },
+      { name: 'label', type: 'string' },
+    ],
+  },
+  {
+    name: 'CustomWeapon',
+    supportsNamedArgs: true,
+    params: [
+      { name: 'reference', type: 'string' },
+      { name: 'code', type: 'string' },
+      { name: 'scaleOnGround', type: 'int' },
+      { name: 'scaleOnIcon', type: 'int' },
+      { name: 'weight', type: 'int' },
+      { name: 'damage', type: 'int' },
+      { name: 'swapTime', type: 'int' },
+      { name: 'fireTime', type: 'int' },
+      { name: 'fireType', type: 'int' },
+      { name: 'pivotOnHandX', type: 'int' },
+      { name: 'pivotOnHandXScale', type: 'int' },
+      { name: 'pivotOnHandY', type: 'int' },
+      { name: 'pivotOnHandYScale', type: 'int' },
+      { name: 'pivotOnHandDegree', type: 'int' },
+      { name: 'pivotOnIconX', type: 'int' },
+      { name: 'pivotOnIconXScale', type: 'int' },
+      { name: 'pivotOnIconY', type: 'int' },
+      { name: 'pivotOnIconYScale', type: 'int' },
+      { name: 'pivotOnIconDegree', type: 'int' },
+    ],
+  },
+];
+
+const builtinStructMap = new Map(builtinStructDefs.map((item) => [item.name, item]));
 
 const keywordDocs: KeywordDoc[] = [
   { label: 'block', detail: 'TWGE block declaration', docs: 'Declare a game event block.' },
@@ -109,7 +184,12 @@ connection.onInitialize((_params: InitializeParams): InitializeResult => {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       completionProvider: {
+        triggerCharacters: ['(', ','],
         resolveProvider: false,
+      },
+      signatureHelpProvider: {
+        triggerCharacters: ['(', ','],
+        retriggerCharacters: [','],
       },
       hoverProvider: true,
     },
@@ -148,16 +228,91 @@ connection.onCompletion((params): CompletionItem[] => {
     return [...baseCompletions, ...snippetCompletions];
   }
 
+  const functionDefs = parseBlockFunctionDefs(document.getText());
+
   const line = document.getText({
     start: { line: params.position.line, character: 0 },
     end: params.position,
   });
+  const blockAssignmentCompletions = getBlockAssignmentCompletions(line, functionDefs);
+  if (blockAssignmentCompletions.length > 0) {
+    return [...blockAssignmentCompletions, ...baseCompletions];
+  }
+
+  const callContext = getFunctionCallContext(line);
+  if (callContext) {
+    const builtinParamCompletions = getBuiltinStructParamCompletions(callContext);
+    if (builtinParamCompletions.length > 0) {
+      return [...builtinParamCompletions, ...baseCompletions];
+    }
+  }
+
   const isTopLevel = /^\s*$/.test(line) || /^\s*(def|const|block|__)/.test(line);
   if (isTopLevel) {
     return [...snippetCompletions, ...baseCompletions];
   }
 
   return [...baseCompletions, ...snippetCompletions];
+});
+
+connection.onSignatureHelp((params): SignatureHelp | null => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return null;
+  }
+
+  const functionDefs = parseBlockFunctionDefs(document.getText());
+  const line = document.getText({
+    start: { line: params.position.line, character: 0 },
+    end: params.position,
+  });
+
+  const callContext = getBlockAssignmentCallContext(line);
+  if (callContext) {
+    const fn = functionDefs.find((item) => item.name === callContext.name);
+    if (fn) {
+      const parameters = fn.params.map((param) => ParameterInformation.create(param));
+      const signatureLabel = `${fn.name}(${fn.params.join(', ')})`;
+      const signature = SignatureInformation.create(signatureLabel, 'User-defined TWGE block function.', ...parameters);
+
+      return {
+        signatures: [signature],
+        activeSignature: 0,
+        activeParameter: Math.min(callContext.activeParameter, Math.max(0, fn.params.length - 1)),
+      };
+    }
+  }
+
+  const genericCall = getFunctionCallContext(line);
+  if (!genericCall) {
+    return null;
+  }
+
+  const builtinStruct = builtinStructMap.get(genericCall.name);
+  if (!builtinStruct) {
+    return null;
+  }
+
+  const parameters = builtinStruct.params.map((param) =>
+    ParameterInformation.create(`${param.name}: ${param.type}`)
+  );
+  const signatureLabel = `${builtinStruct.name}(${builtinStruct.params
+    .map((param) => `${param.name}: ${param.type}`)
+    .join(', ')})`;
+  const signature = SignatureInformation.create(
+    signatureLabel,
+    'Builtin struct constructor.',
+    ...parameters
+  );
+
+  return {
+    signatures: [signature],
+    activeSignature: 0,
+    activeParameter: Math.min(
+      genericCall.activeParameter,
+      Math.max(0, builtinStruct.params.length - 1)
+    ),
+  };
 });
 
 documents.onDidOpen((event) => {
@@ -247,23 +402,6 @@ function validateTextDocument(document: TextDocument): void {
     if (trimmed.length === 0 || trimmed.startsWith('//') || inBlockComment) {
       continue;
     }
-
-    const isMetadata = /^__[^\s]+__\s*=/.test(trimmed);
-    const isConst = /^const\s+/.test(trimmed);
-    const isAssignment = /^[A-Za-z_\u0080-\uFFFF][\w\u0080-\uFFFF.:]*\s*=/.test(trimmed);
-    const needsSemicolon = (isMetadata || isConst || isAssignment) && !trimmed.endsWith(';');
-
-    if (needsSemicolon) {
-      diagnostics.push({
-        severity: DiagnosticSeverity.Warning,
-        range: {
-          start: { line: lineIndex, character: 0 },
-          end: { line: lineIndex, character: line.length },
-        },
-        message: 'This statement likely needs a trailing semicolon (;).',
-        source: 'twge-lsp',
-      });
-    }
   }
 
   for (const unclosed of stack) {
@@ -323,6 +461,237 @@ function getWordRange(document: TextDocument, position: Position): Range | null 
     start: { line: position.line, character: start },
     end: { line: position.line, character: end },
   };
+}
+
+function parseBlockFunctionDefs(text: string): BlockFunctionDef[] {
+  const output: BlockFunctionDef[] = [];
+  const seen = new Set<string>();
+  const defRegex = /^\s*def\s+([^\s(]+)\s*\(([^)]*)\)\s*:\s*block\b/gm;
+
+  let match: RegExpExecArray | null = defRegex.exec(text);
+  while (match) {
+    const name = match[1].trim();
+    const paramsRaw = match[2].trim();
+    const params = paramsRaw.length === 0
+      ? []
+      : paramsRaw.split(',').map((item) => item.trim()).filter((item) => item.length > 0);
+
+    if (!seen.has(name)) {
+      output.push({ name, params });
+      seen.add(name);
+    }
+
+    match = defRegex.exec(text);
+  }
+
+  return output;
+}
+
+function getBlockAssignmentCompletions(linePrefix: string, defs: BlockFunctionDef[]): CompletionItem[] {
+  const match = linePrefix.match(/^\s*block\s+[^\s=]+\s*=\s*([^\n]*)$/);
+  if (!match) {
+    return [];
+  }
+
+  const rhs = match[1];
+  const typedPrefixMatch = rhs.match(/([^\s(,]*)$/);
+  const typedPrefix = typedPrefixMatch ? typedPrefixMatch[1] : '';
+
+  return defs
+    .filter((item) => typedPrefix.length === 0 || item.name.startsWith(typedPrefix))
+    .map((item) => {
+      const argsSnippet = item.params
+        .map((param, index) => `\${${index + 1}:${escapeSnippetValue(param)}}`)
+        .join(', ');
+      const insertText = `${item.name}(${argsSnippet})`;
+
+      return {
+        label: item.name,
+        kind: CompletionItemKind.Function,
+        detail: `def ${item.name}(${item.params.join(', ')}) : block`,
+        documentation: 'User-defined TWGE block function.',
+        insertText,
+        insertTextFormat: InsertTextFormat.Snippet,
+      };
+    });
+}
+
+function getBlockAssignmentCallContext(
+  linePrefix: string
+): { name: string; activeParameter: number } | null {
+  const match = linePrefix.match(/^\s*block\s+[^\s=]+\s*=\s*([^\s(]+)\s*\(([^)]*)$/);
+  if (!match) {
+    return null;
+  }
+
+  const name = match[1].trim();
+  const argsPart = match[2];
+  const activeParameter = argsPart.trim().length === 0
+    ? 0
+    : argsPart.split(',').length - 1;
+
+  return {
+    name,
+    activeParameter,
+  };
+}
+
+function getFunctionCallContext(
+  linePrefix: string
+): { name: string; activeParameter: number; argsText: string } | null {
+  let depth = 0;
+  let openParenIndex = -1;
+
+  for (let i = linePrefix.length - 1; i >= 0; i--) {
+    const c = linePrefix[i];
+    if (c === ')') {
+      depth += 1;
+      continue;
+    }
+    if (c === '(') {
+      if (depth === 0) {
+        openParenIndex = i;
+        break;
+      }
+      depth -= 1;
+    }
+  }
+
+  if (openParenIndex < 0) {
+    return null;
+  }
+
+  let end = openParenIndex - 1;
+  while (end >= 0 && /\s/.test(linePrefix[end])) {
+    end -= 1;
+  }
+  if (end < 0) {
+    return null;
+  }
+
+  let start = end;
+  while (start >= 0 && /[A-Za-z0-9_:\u0080-\uFFFF]/.test(linePrefix[start])) {
+    start -= 1;
+  }
+
+  const name = linePrefix.slice(start + 1, end + 1).trim();
+  if (name.length === 0) {
+    return null;
+  }
+
+  const argsText = linePrefix.slice(openParenIndex + 1);
+  return {
+    name,
+    activeParameter: getActiveParameterIndex(argsText),
+    argsText,
+  };
+}
+
+function getBuiltinStructParamCompletions(callContext: {
+  name: string;
+  activeParameter: number;
+  argsText: string;
+}): CompletionItem[] {
+  const structDef = builtinStructMap.get(callContext.name);
+  if (!structDef) {
+    return [];
+  }
+
+  if (!structDef.supportsNamedArgs) {
+    return structDef.params
+      .filter((_param, index) => index >= callContext.activeParameter)
+      .map((param, idx) => {
+        const isLast = callContext.activeParameter + idx >= structDef.params.length - 1;
+        return {
+          label: param.name,
+          kind: CompletionItemKind.Variable,
+          detail: `${param.name}: ${param.type} (positional)`,
+          documentation: `${structDef.name} positional parameter`,
+          insertText: `\${1:${defaultValueForType(param.type)}}${isLast ? '' : ', '}`,
+          insertTextFormat: InsertTextFormat.Snippet,
+        };
+      });
+  }
+
+  const usedNames = new Set<string>();
+  const namedArgRegex = /\b([A-Za-z_\u0080-\uFFFF][\w\u0080-\uFFFF]*)\s*=/g;
+  let namedMatch: RegExpExecArray | null = namedArgRegex.exec(callContext.argsText);
+  while (namedMatch) {
+    usedNames.add(namedMatch[1]);
+    namedMatch = namedArgRegex.exec(callContext.argsText);
+  }
+
+  const typedPrefixMatch = callContext.argsText.match(/([A-Za-z_\u0080-\uFFFF][\w\u0080-\uFFFF]*)?$/);
+  const typedPrefix = typedPrefixMatch?.[1] ?? '';
+
+  return structDef.params
+    .filter((param) => !usedNames.has(param.name))
+    .filter((param) => typedPrefix.length === 0 || param.name.startsWith(typedPrefix))
+    .map((param) => ({
+      label: param.name,
+      kind: CompletionItemKind.Field,
+      detail: `${param.name}: ${param.type}`,
+      documentation: `${structDef.name} field`,
+      insertText: `${param.name} = \${1:${defaultValueForType(param.type)}}`,
+      insertTextFormat: InsertTextFormat.Snippet,
+    }));
+}
+
+function getActiveParameterIndex(argsText: string): number {
+  let roundDepth = 0;
+  let squareDepth = 0;
+  let curlyDepth = 0;
+  let inString = false;
+  let commas = 0;
+
+  for (let i = 0; i < argsText.length; i++) {
+    const c = argsText[i];
+    const prev = i > 0 ? argsText[i - 1] : '';
+
+    if (c === '"' && prev !== '\\') {
+      inString = !inString;
+      continue;
+    }
+    if (inString) {
+      continue;
+    }
+
+    if (c === '(') {
+      roundDepth += 1;
+    } else if (c === ')') {
+      if (roundDepth > 0) {
+        roundDepth -= 1;
+      }
+    } else if (c === '[') {
+      squareDepth += 1;
+    } else if (c === ']') {
+      if (squareDepth > 0) {
+        squareDepth -= 1;
+      }
+    } else if (c === '{') {
+      curlyDepth += 1;
+    } else if (c === '}') {
+      if (curlyDepth > 0) {
+        curlyDepth -= 1;
+      }
+    } else if (c === ',' && roundDepth === 0 && squareDepth === 0 && curlyDepth === 0) {
+      commas += 1;
+    }
+  }
+
+  const hasNonWhitespace = argsText.trim().length > 0;
+  return hasNonWhitespace ? commas : 0;
+}
+
+function defaultValueForType(type: string): string {
+  if (type === 'string') {
+    return '""';
+  }
+  return '0';
+}
+
+function escapeSnippetValue(value: string): string {
+  return value.replace(/[$}\\]/g, '\\$&');
 }
 
 documents.listen(connection);
