@@ -1,16 +1,32 @@
 {
   "name": "twge-syntax-highlighter",
-  "displayName": "Twilight GameEvents Syntax Highlighter",
-  "description": "Simple syntax highlight for Twilight GameEvents.",
+  "displayName": "TWGE Language Tools",
+  "description": "Syntax highlighting and LSP support for Twilight GameEvents.",
   "version": "0.0.1",
+  "publisher": "twge",
+  "license": "MIT",
+  "main": "./out/extension.js",
   "scripts": {
-    "build": "js-yaml syntaxes/twge.tmLanguage.yaml > syntaxes/twge.tmLanguage.json"
+    "build": "npm run build:grammar",
+    "build:grammar": "js-yaml syntaxes/twge.tmLanguage.yaml > syntaxes/twge.tmLanguage.json",
+    "vscode:prepublish": "npm run compile",
+    "compile": "npm run build:grammar && npm run compile:client && npm run compile:server",
+    "compile:client": "tsc -p ./",
+    "compile:server": "tsc -p ./server",
+    "watch": "npm run watch:client & npm run watch:server",
+    "watch:client": "tsc -w -p ./",
+    "watch:server": "tsc -w -p ./server",
+    "package": "vsce package"
   },
   "engines": {
     "vscode": "^1.76.0"
   },
   "categories": [
     "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:twge",
+    "onCommand:twge-lsp.restartServer"
   ],
   "contributes": {
     "languages": [
@@ -31,13 +47,28 @@
         "scopeName": "source.twge",
         "path": "./syntaxes/twge.tmLanguage.json"
       }
+    ],
+    "commands": [
+      {
+        "command": "twge-lsp.restartServer",
+        "title": "TWGE: Restart Language Server"
+      }
     ]
   },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11"
+  },
   "devDependencies": {
-    "js-yaml": "^4.1.0"
+    "@types/node": "^20.17.30",
+    "@types/vscode": "^1.76.0",
+    "@vscode/vsce": "^3.6.2",
+    "js-yaml": "^4.1.0",
+    "typescript": "^5.8.3"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/wcleungaj-60/twge-syntax-highlighter.git"
+    "url": "https://github.com/lwclwclwc60/twge-syntax-highlighter.git"
   }
 }

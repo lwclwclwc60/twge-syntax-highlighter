@@ -6,4 +6,6 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
-- Initial release
+- Added extension host entry point and integrated TWGE LSP client/server.
+- Added syntax hint features: completion, snippets, hover, and basic diagnostics.
+- Kept existing TextMate grammar-based syntax highlighting support.
