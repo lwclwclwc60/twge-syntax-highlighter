@@ -45,6 +45,7 @@ type StructParamDef = {
 type InstructionParamDef = {
   name: string;
   type: string;
+  value?: string;
 };
 
 type InstructionDef = {
@@ -130,9 +131,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorAttributes',
     zh: '設定角色屬性',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'attr', type: 'string' },
-      { name: 'value', type: 'int|string' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'attr', type: 'string', value: '' },
+      { name: 'value', type: 'int|string', value: '' },
     ],
   },
   {
@@ -140,9 +141,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorDisappear',
     zh: '角色消失',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'delay', type: 'int|string' },
-      { name: 'duration', type: 'int|string' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'delay', type: 'int|string', value: '0' },
+      { name: 'duration', type: 'int|string', value: '600' },
     ],
   },
   {
@@ -150,9 +151,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorFollow',
     zh: '跟隨人物',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'targetId', type: 'string' },
-      { name: 'type', type: 'string' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'targetId', type: 'string', value: '' },
+      { name: 'type', type: 'string', value: 'actor' },
     ],
   },
   {
@@ -160,10 +161,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorRelocate',
     zh: '移動角色位置',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'keepAbility', type: 'bool' },
-      { name: 'x', type: 'int|string' },
-      { name: 'y', type: 'int|string' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'keepAbility', type: 'bool', value: 'false' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -171,9 +172,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorSpawnLoc',
     zh: '角色重生位置',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'x', type: 'int|string' },
-      { name: 'y', type: 'int|string' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -181,11 +182,11 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorTalk',
     zh: '角色說話',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'cleanTalk', type: 'bool' },
-      { name: 'duration', type: 'int|string' },
-      { name: 'text', type: 'string' },
-      { name: 'wait', type: 'bool' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'cleanTalk', type: 'bool', value: 'true' },
+      { name: 'duration', type: 'int|string', value: '3000' },
+      { name: 'text', type: 'string', value: '' },
+      { name: 'wait', type: 'bool', value: 'false' },
     ],
   },
   {
@@ -193,23 +194,23 @@ const instructionDefs: InstructionDef[] = [
     name: 'addActor',
     zh: '新增角色',
     params: [
-      { name: 'camp', type: 'string' },
-      { name: 'externRole', type: 'string' },
-      { name: 'hp', type: 'int|string' },
-      { name: 'id', type: 'string' },
-      { name: 'localVarname', type: 'string' },
-      { name: 'movableRange', type: 'int|string' },
-      { name: 'name', type: 'string' },
-      { name: 'patrol', type: 'list[Point]' },
-      { name: 'range', type: 'int|string' },
-      { name: 'role', type: 'string' },
-      { name: 'rotation', type: 'int|string' },
-      { name: 'strength', type: 'int|string' },
-      { name: 'teamId', type: 'int|string' },
-      { name: 'weapon1', type: 'string' },
-      { name: 'weapon2', type: 'string' },
-      { name: 'x', type: 'int|string' },
-      { name: 'y', type: 'int|string' },
+      { name: 'camp', type: 'string', value: 'skydow' },
+      { name: 'externRole', type: 'string', value: '' },
+      { name: 'hp', type: 'int|string', value: '100' },
+      { name: 'id', type: 'string', value: 'ai*' },
+      { name: 'localVarname', type: 'string', value: 'actor' },
+      { name: 'movableRange', type: 'int|string', value: '10000' },
+      { name: 'name', type: 'string', value: '' },
+      { name: 'patrol', type: 'list[Point]', value: '[]' },
+      { name: 'range', type: 'int|string', value: '0' },
+      { name: 'role', type: 'string', value: '0' },
+      { name: 'rotation', type: 'int|string', value: '0' },
+      { name: 'strength', type: 'int|string', value: '1' },
+      { name: 'teamId', type: 'int|string', value: '0' },
+      { name: 'weapon1', type: 'string', value: 'default' },
+      { name: 'weapon2', type: 'string', value: 'default' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -217,13 +218,13 @@ const instructionDefs: InstructionDef[] = [
     name: 'addDropItem',
     zh: '新增放置可拾取道具',
     params: [
-      { name: 'itemCode', type: 'string' },
-      { name: 'localVarname', type: 'string' },
-      { name: 'range', type: 'int|string' },
-      { name: 'scale', type: 'int|string' },
-      { name: 'type', type: 'string' },
-      { name: 'x', type: 'int|string' },
-      { name: 'y', type: 'int|string' },
+      { name: 'itemCode', type: 'string', value: '' },
+      { name: 'localVarname', type: 'string', value: '' },
+      { name: 'range', type: 'int|string', value: '0' },
+      { name: 'scale', type: 'int|string', value: '1' },
+      { name: 'type', type: 'string', value: 'paper' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -231,11 +232,11 @@ const instructionDefs: InstructionDef[] = [
     name: 'addManaCircle',
     zh: '新增回氣魔法陣',
     params: [
-      { name: 'x', type: 'int|string' },
-      { name: 'y', type: 'int|string' },
-      { name: 'heal', type: 'int|string' },
-      { name: 'healActorCooldown', type: 'int|string' },
-      { name: 'healDeviceCooldown', type: 'int|string' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
+      { name: 'heal', type: 'int|string', value: '10' },
+      { name: 'healActorCooldown', type: 'int|string', value: '1000' },
+      { name: 'healDeviceCooldown', type: 'int|string', value: '200' },
     ],
   },
   {
@@ -243,12 +244,12 @@ const instructionDefs: InstructionDef[] = [
     name: 'addMapObject',
     zh: '新增地圖物件',
     params: [
-      { name: 'autoTuneHeight', type: 'bool' },
-      { name: 'object', type: 'string' },
-      { name: 'range', type: 'int|string' },
-      { name: 'walkable', type: 'bool' },
-      { name: 'x', type: 'int|string' },
-      { name: 'y', type: 'int|string' },
+      { name: 'autoTuneHeight', type: 'bool', value: 'true' },
+      { name: 'object', type: 'string', value: 'tree0' },
+      { name: 'range', type: 'int|string', value: '0' },
+      { name: 'walkable', type: 'bool', value: 'true' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -256,13 +257,13 @@ const instructionDefs: InstructionDef[] = [
     name: 'addMapSign',
     zh: '新增告示牌',
     params: [
-      { name: 'buttons', type: 'list[Button]' },
-      { name: 'range', type: 'int|string' },
-      { name: 'rotation', type: 'int|string' },
-      { name: 'showButtons', type: 'bool' },
-      { name: 'text', type: 'string' },
-      { name: 'x', type: 'int|string' },
-      { name: 'y', type: 'int|string' },
+      { name: 'buttons', type: 'list[Button]', value: '[]' },
+      { name: 'range', type: 'int|string', value: '0' },
+      { name: 'rotation', type: 'int|string', value: '0' },
+      { name: 'showButtons', type: 'bool', value: 'true' },
+      { name: 'text', type: 'string', value: '' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -270,29 +271,31 @@ const instructionDefs: InstructionDef[] = [
     name: 'addStuff',
     zh: '新增武器道具',
     params: [
-      { name: 'code', type: 'string' },
-      { name: 'item', type: 'string' },
-      { name: 'range', type: 'int|string' },
-      { name: 'refill', type: 'bool' },
-      { name: 'refillInterval', type: 'int|string' },
-      { name: 'rotation', type: 'int|string' },
-      { name: 'x', type: 'int|string' },
-      { name: 'y', type: 'int|string' },
+      { name: 'code', type: 'string', value: 'item*' },
+      { name: 'item', type: 'string', value: 'magazine' },
+      { name: 'range', type: 'int|string', value: '0' },
+      { name: 'refill', type: 'bool', value: 'true' },
+      { name: 'refillInterval', type: 'int|string', value: '10000' },
+      { name: 'rotation', type: 'int|string', value: '0' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
     ],
   },
   {
     scope: 'actions',
     name: 'avoidFriendFire',
     zh: '迴避友軍攻擊',
-    params: [{ name: 'value', type: 'bool' }],
+    params: [
+      { name: 'value', type: 'bool', value: 'true' },
+    ],
   },
   {
     scope: 'actions',
     name: 'closeDialog',
     zh: '關閉彈出視窗',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'dialogId', type: 'string' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'dialogId', type: 'string', value: '' },
     ],
   },
   {
@@ -300,10 +303,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'deltaHp',
     zh: '角色加減血',
     params: [
-      { name: 'actorCode', type: 'string' },
-      { name: 'casterCode', type: 'string' },
-      { name: 'type', type: 'string' },
-      { name: 'value', type: 'int|string' },
+      { name: 'actorCode', type: 'string', value: '' },
+      { name: 'casterCode', type: 'string', value: '' },
+      { name: 'type', type: 'string', value: 'heal' },
+      { name: 'value', type: 'int|string', value: '' },
     ],
   },
   {
@@ -311,13 +314,13 @@ const instructionDefs: InstructionDef[] = [
     name: 'enblastEffect',
     zh: '光彈特效',
     params: [
-      { name: 'damage', type: 'int|string' },
-      { name: 'fromActor', type: 'string' },
-      { name: 'fromType', type: 'string' },
-      { name: 'scale', type: 'int|string' },
-      { name: 'speed', type: 'int|string' },
-      { name: 'toAngle', type: 'int|string' },
-      { name: 'toType', type: 'string' },
+      { name: 'damage', type: 'int|string', value: '30' },
+      { name: 'fromActor', type: 'string', value: 'instance' },
+      { name: 'fromType', type: 'string', value: 'actor' },
+      { name: 'scale', type: 'int|string', value: '1' },
+      { name: 'speed', type: 'int|string', value: '0.7' },
+      { name: 'toAngle', type: 'int|string', value: '0' },
+      { name: 'toType', type: 'string', value: 'angle' },
     ],
   },
   {
@@ -325,10 +328,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'equipWeapon',
     zh: '人物裝備武器',
     params: [
-      { name: 'actorCode', type: 'string' },
-      { name: 'hand', type: 'int|string' },
-      { name: 'isDefault', type: 'bool' },
-      { name: 'type', type: 'string' },
+      { name: 'actorCode', type: 'string', value: '' },
+      { name: 'hand', type: 'int|string', value: '-1' },
+      { name: 'isDefault', type: 'bool', value: 'true' },
+      { name: 'type', type: 'string', value: 'fist' },
     ],
   },
   {
@@ -336,8 +339,8 @@ const instructionDefs: InstructionDef[] = [
     name: 'getCookie',
     zh: '取得Cookies',
     params: [
-      { name: 'cookies', type: 'string' },
-      { name: 'varName', type: 'string' },
+      { name: 'cookies', type: 'string', value: '' },
+      { name: 'varName', type: 'string', value: '' },
     ],
   },
   {
@@ -345,10 +348,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'getUserState',
     zh: '取得玩家狀態',
     params: [
-      { name: 'category', type: 'string' },
-      { name: 'key', type: 'string' },
-      { name: 'playerId', type: 'string' },
-      { name: 'varName', type: 'string' },
+      { name: 'category', type: 'string', value: '' },
+      { name: 'key', type: 'string', value: '' },
+      { name: 'playerId', type: 'string', value: '' },
+      { name: 'varName', type: 'string', value: '' },
     ],
   },
   {
@@ -356,32 +359,36 @@ const instructionDefs: InstructionDef[] = [
     name: 'mapWarp',
     zh: '設定地圖傳送點',
     params: [
-      { name: 'direction', type: 'string' },
-      { name: 'fromX', type: 'int|string' },
-      { name: 'fromY', type: 'int|string' },
-      { name: 'toX', type: 'int|string' },
-      { name: 'toY', type: 'int|string' },
+      { name: 'direction', type: 'string', value: 'right' },
+      { name: 'fromX', type: 'int|string', value: '0' },
+      { name: 'fromY', type: 'int|string', value: '0' },
+      { name: 'toX', type: 'int|string', value: '0' },
+      { name: 'toY', type: 'int|string', value: '0' },
     ],
   },
   {
     scope: 'actions',
     name: 'missionComplete',
     zh: '任務完成',
-    params: [{ name: 'camp', type: 'string' }],
+    params: [
+      { name: 'camp', type: 'string', value: 'all' },
+    ],
   },
   {
     scope: 'actions',
     name: 'longBo',
     zh: '龍波',
-    params: [{ name: 'actorCode', type: 'string' }],
+    params: [
+      { name: 'actorCode', type: 'string', value: '' },
+    ],
   },
   {
     scope: 'actions',
     name: 'print',
     zh: '控制台輸出',
     params: [
-      { name: 'text', type: 'string' },
-      { name: 'type', type: 'string' },
+      { name: 'text', type: 'string', value: '' },
+      { name: 'type', type: 'string', value: 'log' },
     ],
   },
   {
@@ -389,10 +396,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'removeDevice',
     zh: '移除地圖機關',
     params: [
-      { name: 'region_h', type: 'int|string' },
-      { name: 'region_w', type: 'int|string' },
-      { name: 'region_x', type: 'int|string' },
-      { name: 'region_y', type: 'int|string' },
+      { name: 'region_h', type: 'int|string', value: '0' },
+      { name: 'region_w', type: 'int|string', value: '0' },
+      { name: 'region_x', type: 'int|string', value: '0' },
+      { name: 'region_y', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -400,10 +407,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'removeMapObject',
     zh: '移除地圖物件',
     params: [
-      { name: 'region_h', type: 'int|string' },
-      { name: 'region_w', type: 'int|string' },
-      { name: 'region_x', type: 'int|string' },
-      { name: 'region_y', type: 'int|string' },
+      { name: 'region_h', type: 'int|string', value: '0' },
+      { name: 'region_w', type: 'int|string', value: '0' },
+      { name: 'region_x', type: 'int|string', value: '0' },
+      { name: 'region_y', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -411,10 +418,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'setCookie',
     zh: '儲存Cookies',
     params: [
-      { name: 'cookies', type: 'string' },
-      { name: 'playerId', type: 'string' },
-      { name: 'type', type: 'string' },
-      { name: 'value', type: 'string' },
+      { name: 'cookies', type: 'string', value: '' },
+      { name: 'playerId', type: 'string', value: '' },
+      { name: 'type', type: 'string', value: 'string' },
+      { name: 'value', type: 'string', value: '' },
     ],
   },
   {
@@ -422,9 +429,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'setGlobal',
     zh: '儲存全域變數',
     params: [
-      { name: 'key', type: 'string' },
-      { name: 'type', type: 'string' },
-      { name: 'value', type: 'int|string' },
+      { name: 'key', type: 'string', value: '' },
+      { name: 'type', type: 'string', value: 'string' },
+      { name: 'value', type: 'int|string', value: '' },
     ],
   },
   {
@@ -432,10 +439,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'setObjectVar',
     zh: '儲存物件變數',
     params: [
-      { name: 'key', type: 'string' },
-      { name: 'object', type: 'string' },
-      { name: 'type', type: 'string' },
-      { name: 'value', type: 'int|string' },
+      { name: 'key', type: 'string', value: '' },
+      { name: 'object', type: 'string', value: '' },
+      { name: 'type', type: 'string', value: 'string' },
+      { name: 'value', type: 'int|string', value: '' },
     ],
   },
   {
@@ -443,11 +450,11 @@ const instructionDefs: InstructionDef[] = [
     name: 'setUserState',
     zh: '儲存玩家狀態',
     params: [
-      { name: 'category', type: 'string' },
-      { name: 'key', type: 'string' },
-      { name: 'playerId', type: 'string' },
-      { name: 'type', type: 'string' },
-      { name: 'value', type: 'string' },
+      { name: 'category', type: 'string', value: '' },
+      { name: 'key', type: 'string', value: '' },
+      { name: 'playerId', type: 'string', value: '' },
+      { name: 'type', type: 'string', value: '' },
+      { name: 'value', type: 'string', value: '' },
     ],
   },
   {
@@ -455,10 +462,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'setWeaponAbility',
     zh: '設定武器技能',
     params: [
-      { name: 'ability', type: 'string' },
-      { name: 'level', type: 'int|string' },
-      { name: 'operation', type: 'string' },
-      { name: 'weapon', type: 'string' },
+      { name: 'ability', type: 'string', value: 'sounded' },
+      { name: 'level', type: 'int|string', value: '1' },
+      { name: 'operation', type: 'string', value: 'set' },
+      { name: 'weapon', type: 'string', value: '' },
     ],
   },
   {
@@ -466,10 +473,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'showSelectDialog',
     zh: '彈出選項視窗',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'dialogId', type: 'string' },
-      { name: 'message', type: 'string' },
-      { name: 'options', type: 'list[Button]' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'dialogId', type: 'string', value: '' },
+      { name: 'message', type: 'string', value: '' },
+      { name: 'options', type: 'list[Button]', value: '[]' },
     ],
   },
   {
@@ -477,27 +484,29 @@ const instructionDefs: InstructionDef[] = [
     name: 'tipOnMap',
     zh: '地圖標示文字',
     params: [
-      { name: 'duration', type: 'int|string' },
-      { name: 'html', type: 'bool' },
-      { name: 'text', type: 'string' },
-      { name: 'x', type: 'int|string' },
-      { name: 'y', type: 'int|string' },
+      { name: 'duration', type: 'int|string', value: '3000' },
+      { name: 'html', type: 'bool', value: 'false' },
+      { name: 'text', type: 'string', value: '' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
     ],
   },
   {
     scope: 'actions',
     name: 'wait',
     zh: '等待',
-    params: [{ name: 'duration', type: 'int|string' }],
+    params: [
+      { name: 'duration', type: 'int|string', value: '0' },
+    ],
   },
   {
     scope: 'actions',
     name: 'EnhFF::playerMousePosition',
     zh: 'EnhFF::玩家滑鼠座標',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'varX', type: 'string' },
-      { name: 'varY', type: 'string' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'varX', type: 'string', value: 'x' },
+      { name: 'varY', type: 'string', value: 'y' },
     ],
   },
   {
@@ -505,20 +514,20 @@ const instructionDefs: InstructionDef[] = [
     name: 'EnhFF::generalCircularRange',
     zh: 'EnhFF::廣義圓形範圍',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'color', type: 'string' },
-      { name: 'deltaHpCD', type: 'int|string' },
-      { name: 'deltaHpCasterCode', type: 'string' },
-      { name: 'deltaHpTarget', type: 'ActorMatch' },
-      { name: 'deltaHpType', type: 'string' },
-      { name: 'deltaHpValue', type: 'int|string' },
-      { name: 'duration', type: 'int|string' },
-      { name: 'lineWidth', type: 'int|string' },
-      { name: 'offsetX', type: 'int|string' },
-      { name: 'offsetY', type: 'int|string' },
-      { name: 'radius', type: 'int|string' },
-      { name: 'x', type: 'int|string' },
-      { name: 'y', type: 'int|string' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'color', type: 'string', value: '#ffffff' },
+      { name: 'deltaHpCD', type: 'int|string', value: '10000' },
+      { name: 'deltaHpCasterCode', type: 'string', value: '' },
+      { name: 'deltaHpTarget', type: 'ActorMatch', value: '[]' },
+      { name: 'deltaHpType', type: 'string', value: 'heal' },
+      { name: 'deltaHpValue', type: 'int|string', value: '' },
+      { name: 'duration', type: 'int|string', value: '10000' },
+      { name: 'lineWidth', type: 'int|string', value: '1' },
+      { name: 'offsetX', type: 'int|string', value: '0' },
+      { name: 'offsetY', type: 'int|string', value: '0' },
+      { name: 'radius', type: 'int|string', value: '0' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -526,14 +535,14 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorCount',
     zh: '計算人數',
     params: [
-      { name: 'actor', type: 'ActorMatch' },
-      { name: 'op', type: 'string' },
-      { name: 'region_h', type: 'int|string' },
-      { name: 'region_w', type: 'int|string' },
-      { name: 'region_x', type: 'int|string' },
-      { name: 'region_y', type: 'int|string' },
-      { name: 'value', type: 'int|string' },
-      { name: 'varname', type: 'string' },
+      { name: 'actor', type: 'ActorMatch', value: '[]' },
+      { name: 'op', type: 'string', value: '==' },
+      { name: 'region_h', type: 'int|string', value: '' },
+      { name: 'region_w', type: 'int|string', value: '' },
+      { name: 'region_x', type: 'int|string', value: '' },
+      { name: 'region_y', type: 'int|string', value: '' },
+      { name: 'value', type: 'int|string', value: '' },
+      { name: 'varname', type: 'string', value: '' },
     ],
   },
   {
@@ -541,12 +550,12 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorRegion',
     zh: '角色所在區域',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'checkAlive', type: 'bool' },
-      { name: 'region_h', type: 'int|string' },
-      { name: 'region_w', type: 'int|string' },
-      { name: 'region_x', type: 'int|string' },
-      { name: 'region_y', type: 'int|string' },
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'checkAlive', type: 'bool', value: 'false' },
+      { name: 'region_h', type: 'int|string', value: '0' },
+      { name: 'region_w', type: 'int|string', value: '0' },
+      { name: 'region_x', type: 'int|string', value: '0' },
+      { name: 'region_y', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -554,9 +563,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'checkNumber',
     zh: '比較數字',
     params: [
-      { name: 'lhs', type: 'int|string' },
-      { name: 'op', type: 'string' },
-      { name: 'rhs', type: 'int|string' },
+      { name: 'lhs', type: 'int|string', value: '0' },
+      { name: 'op', type: 'string', value: '==' },
+      { name: 'rhs', type: 'int|string', value: '0' },
     ],
   },
   {
@@ -564,9 +573,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'checkString',
     zh: '比對字串',
     params: [
-      { name: 'matchKind', type: 'string' },
-      { name: 'str', type: 'string' },
-      { name: 'value', type: 'string' },
+      { name: 'matchKind', type: 'string', value: 'contain' },
+      { name: 'str', type: 'string', value: '' },
+      { name: 'value', type: 'string', value: '' },
     ],
   },
   {
@@ -574,8 +583,8 @@ const instructionDefs: InstructionDef[] = [
     name: 'forEachActor',
     zh: '找出所有角色',
     params: [
-      { name: 'actor', type: 'ActorMatch' },
-      { name: 'varname', type: 'string' },
+      { name: 'actor', type: 'ActorMatch', value: '[]' },
+      { name: 'varname', type: 'string', value: '' },
     ],
   },
   {
@@ -583,8 +592,8 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorAdded',
     zh: '角色進入戰場',
     params: [
-      { name: 'actor', type: 'ActorMatch' },
-      { name: 'varName', type: 'string' },
+      { name: 'actor', type: 'ActorMatch', value: '[]' },
+      { name: 'varName', type: 'string', value: '' },
     ],
   },
   {
@@ -592,9 +601,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorDead',
     zh: '角色死亡',
     params: [
-      { name: 'actor', type: 'ActorMatch' },
-      { name: 'hitterVarName', type: 'string' },
-      { name: 'varName', type: 'string' },
+      { name: 'actor', type: 'ActorMatch', value: '[]' },
+      { name: 'hitterVarName', type: 'string', value: '' },
+      { name: 'varName', type: 'string', value: '' },
     ],
   },
   {
@@ -602,9 +611,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorFire',
     zh: '角色發動攻擊',
     params: [
-      { name: 'actor', type: 'ActorMatch' },
-      { name: 'varName', type: 'string' },
-      { name: 'weapon', type: 'string' },
+      { name: 'actor', type: 'ActorMatch', value: '[]' },
+      { name: 'varName', type: 'string', value: '' },
+      { name: 'weapon', type: 'string', value: '' },
     ],
   },
   {
@@ -612,12 +621,12 @@ const instructionDefs: InstructionDef[] = [
     name: 'actorHit',
     zh: '角色受傷',
     params: [
-      { name: 'actor', type: 'ActorMatch' },
-      { name: 'actorVarName', type: 'string' },
-      { name: 'damageValueVarName', type: 'string' },
-      { name: 'hitter', type: 'ActorMatch' },
-      { name: 'hitterVarName', type: 'string' },
-      { name: 'weapon', type: 'string' },
+      { name: 'actor', type: 'ActorMatch', value: '[]' },
+      { name: 'actorVarName', type: 'string', value: '' },
+      { name: 'damageValueVarName', type: 'string', value: '' },
+      { name: 'hitter', type: 'ActorMatch', value: '[]' },
+      { name: 'hitterVarName', type: 'string', value: '' },
+      { name: 'weapon', type: 'string', value: '' },
     ],
   },
   {
@@ -625,9 +634,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'clickButton',
     zh: '告示牌按鈕',
     params: [
-      { name: 'actor', type: 'ActorMatch' },
-      { name: 'buttonId', type: 'string' },
-      { name: 'varName', type: 'string' },
+      { name: 'actor', type: 'ActorMatch', value: '[]' },
+      { name: 'buttonId', type: 'string', value: '' },
+      { name: 'varName', type: 'string', value: '' },
     ],
   },
   {
@@ -635,9 +644,9 @@ const instructionDefs: InstructionDef[] = [
     name: 'dialogConfirm',
     zh: '視窗確認',
     params: [
-      { name: 'buttonName', type: 'string' },
-      { name: 'dialogId', type: 'string' },
-      { name: 'playerLocalId', type: 'string' },
+      { name: 'buttonName', type: 'string', value: '' },
+      { name: 'dialogId', type: 'string', value: '' },
+      { name: 'playerLocalId', type: 'string', value: '' },
     ],
   },
   {
@@ -645,10 +654,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'keyboardPressed',
     zh: '鍵盤按鍵',
     params: [
-      { name: 'actorId', type: 'string' },
-      { name: 'key', type: 'string' },
-      { name: 'timing', type: 'string' },
-      { name: 'varName', type: 'string' },
+      { name: 'actorId', type: 'string', value: '*' },
+      { name: 'key', type: 'string', value: '65' },
+      { name: 'timing', type: 'string', value: '' },
+      { name: 'varName', type: 'string', value: '' },
     ],
   },
   {
@@ -656,11 +665,11 @@ const instructionDefs: InstructionDef[] = [
     name: 'itemPickup',
     zh: '拾取武器道具',
     params: [
-      { name: 'actor', type: 'ActorMatch' },
-      { name: 'actorVarname', type: 'string' },
-      { name: 'itemMatchCode', type: 'string' },
-      { name: 'itemVarname', type: 'string' },
-      { name: 'matchKind', type: 'string' },
+      { name: 'actor', type: 'ActorMatch', value: '[]' },
+      { name: 'actorVarname', type: 'string', value: '' },
+      { name: 'itemMatchCode', type: 'string', value: '' },
+      { name: 'itemVarname', type: 'string', value: '' },
+      { name: 'matchKind', type: 'string', value: 'contain' },
     ],
   },
   {
@@ -668,10 +677,10 @@ const instructionDefs: InstructionDef[] = [
     name: 'mouseEvent',
     zh: '滑鼠點擊',
     params: [
-      { name: 'XVarName', type: 'string' },
-      { name: 'YVarName', type: 'string' },
-      { name: 'actorId', type: 'string' },
-      { name: 'actorVarName', type: 'string' },
+      { name: 'XVarName', type: 'string', value: '' },
+      { name: 'YVarName', type: 'string', value: '' },
+      { name: 'actorId', type: 'string', value: '*' },
+      { name: 'actorVarName', type: 'string', value: '' },
     ],
   },
   {
@@ -679,12 +688,12 @@ const instructionDefs: InstructionDef[] = [
     name: 'releasePower',
     zh: '發動技能',
     params: [
-      { name: 'ability', type: 'string' },
-      { name: 'actor', type: 'ActorMatch' },
-      { name: 'manaUsage', type: 'int|string' },
-      { name: 'preventDefault', type: 'bool' },
-      { name: 'varName', type: 'string' },
-      { name: 'weapon', type: 'string' },
+      { name: 'ability', type: 'string', value: '' },
+      { name: 'actor', type: 'ActorMatch', value: '[]' },
+      { name: 'manaUsage', type: 'int|string', value: '0' },
+      { name: 'preventDefault', type: 'bool', value: 'false' },
+      { name: 'varName', type: 'string', value: '' },
+      { name: 'weapon', type: 'string', value: '' },
     ],
   },
 ];
@@ -1421,7 +1430,7 @@ function getInstructionNameCompletions(
   return defs.flatMap((item) => {
     const argsSnippet = item.params
       .map(
-        (param, index) => `${param.name} = \${${index + 1}:${defaultValueForType(param.type)}}`
+        (param, index) => `${param.name} = \${${index + 1}:${instructionParamDefault(item.name, param)}}`
       )
       .join(', ');
 
@@ -1473,7 +1482,7 @@ function getInstructionParamCompletions(
           kind: CompletionItemKind.Field,
           detail: `${param.name}: ${param.type}`,
           documentation: `${instruction.name} parameter | ${instruction.zh}`,
-          insertText: `${param.name} = \${1:${defaultValueForType(param.type)}}${isLast ? '' : ', '}`,
+          insertText: `${param.name} = \${1:${instructionParamDefault(instruction.name, param)}}${isLast ? '' : ', '}`,
           insertTextFormat: InsertTextFormat.Snippet,
         };
       });
@@ -1498,9 +1507,20 @@ function getInstructionParamCompletions(
       kind: CompletionItemKind.Field,
       detail: `${param.name}: ${param.type}`,
       documentation: `${instruction.name} parameter | ${instruction.zh}`,
-      insertText: `${param.name} = \${1:${defaultValueForType(param.type)}}`,
+      insertText: `${param.name} = \${1:${instructionParamDefault(instruction.name, param)}}`,
       insertTextFormat: InsertTextFormat.Snippet,
     }));
+}
+
+function instructionParamDefault(
+  _instructionName: string,
+  param: InstructionParamDef
+): string {
+  if (param.value !== undefined) {
+    return param.value;
+  }
+
+  return defaultValueForType(param.type);
 }
 
 function getInstructionByAlias(
