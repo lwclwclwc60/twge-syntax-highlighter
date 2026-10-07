@@ -1235,7 +1235,12 @@ function parseFunctionDefs(text: string): FunctionDef[] {
     const bodyKind = match[3].trim() as FunctionBodyKind;
     const params = paramsRaw.length === 0
       ? []
-      : paramsRaw.split(',').map((item) => item.trim()).filter((item) => item.length > 0);
+      : paramsRaw
+          .split(',')
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0)
+          .map((item) => item.split('=')[0].trim())
+          .filter((item) => item.length > 0);
 
     if (!seen.has(name)) {
       output.push({ name, params, bodyKind });
