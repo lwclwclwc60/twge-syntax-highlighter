@@ -515,19 +515,26 @@ const instructionDefs: InstructionDef[] = [
     zh: 'EnhFF::廣義圓形範圍',
     params: [
       { name: 'actorId', type: 'string', value: '' },
-      { name: 'color', type: 'string', value: '#ffffff' },
-      { name: 'deltaHpCD', type: 'int|string', value: '10000' },
-      { name: 'deltaHpCasterCode', type: 'string', value: '' },
-      { name: 'deltaHpTarget', type: 'ActorMatch', value: '[]' },
-      { name: 'deltaHpType', type: 'string', value: 'heal' },
-      { name: 'deltaHpValue', type: 'int|string', value: '' },
-      { name: 'duration', type: 'int|string', value: '10000' },
-      { name: 'lineWidth', type: 'int|string', value: '1' },
-      { name: 'offsetX', type: 'int|string', value: '0' },
-      { name: 'offsetY', type: 'int|string', value: '0' },
-      { name: 'radius', type: 'int|string', value: '0' },
+      { name: 'defType', type: 'string', value: 'circle' },
       { name: 'x', type: 'int|string', value: '0' },
       { name: 'y', type: 'int|string', value: '0' },
+      { name: 'radius', type: 'int|string', value: '0' },
+      { name: 'width', type: 'int|string', value: '0' },
+      { name: 'height', type: 'int|string', value: '0' },
+      { name: 'offsetX', type: 'int|string', value: '0' },
+      { name: 'offsetY', type: 'int|string', value: '0' },
+      { name: 'duration', type: 'int|string', value: '10000' },
+      { name: 'color', type: 'string', value: '#ffffff' },
+      { name: 'alpha', type: 'int|string', value: '1' },
+      { name: 'lineWidth', type: 'int|string', value: '1' },
+      { name: 'fill', type: 'bool', value: 'false' },
+      { name: 'fillColor', type: 'string', value: '#ffffff' },
+      { name: 'fillAlpha', type: 'int|string', value: '1' },
+      { name: 'deltaHpType', type: 'string', value: 'heal' },
+      { name: 'deltaHpValue', type: 'int|string', value: '' },
+      { name: 'deltaHpCD', type: 'int|string', value: '10000' },
+      { name: 'deltaHpTarget', type: 'ActorMatch', value: '[]' },
+      { name: 'deltaHpCasterCode', type: 'string', value: '' },
     ],
   },
   {
@@ -769,6 +776,7 @@ const keywordDocs: KeywordDoc[] = [
   { label: 'checks', detail: 'TWGE check body type', docs: 'Function body type for check statements.' },
   { label: 'def', detail: 'TWGE function definition', docs: 'Define reusable TWGE functions.' },
   { label: 'const', detail: 'TWGE const definition', docs: 'Declare compile-time constants.' },
+  { label: 'let', detail: 'TWGE mutable variable definition', docs: 'Declare mutable variables.' },
   { label: 'if', detail: 'Conditional expression', docs: 'Conditional statement.' },
   { label: 'else', detail: 'Conditional branch', docs: 'Fallback branch for if.' },
   { label: 'for', detail: 'Loop statement', docs: 'Iterate over a range/list with in.' },
@@ -845,6 +853,14 @@ const snippetCompletions: CompletionItem[] = [
     insertTextFormat: InsertTextFormat.Snippet,
     insertText: 'const ${1:key} = ${2:value};',
     documentation: 'Const declaration snippet.',
+  },
+  {
+    label: 'snippet:let',
+    kind: CompletionItemKind.Snippet,
+    detail: 'Create a let declaration',
+    insertTextFormat: InsertTextFormat.Snippet,
+    insertText: 'let ${1:key} = ${2:value};',
+    documentation: 'Let declaration snippet.',
   },
   {
     label: 'snippet:metadata',
@@ -956,7 +972,7 @@ connection.onCompletion((params): CompletionItem[] => {
     }
   }
 
-  const isTopLevel = /^\s*$/.test(line) || /^\s*(def|const|block|__)/.test(line);
+  const isTopLevel = /^\s*$/.test(line) || /^\s*(def|const|let|block|__)/.test(line);
   if (isTopLevel) {
     return [...snippetCompletions, ...baseCompletions];
   }
