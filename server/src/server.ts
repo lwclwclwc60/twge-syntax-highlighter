@@ -356,6 +356,18 @@ const instructionDefs: InstructionDef[] = [
   },
   {
     scope: 'actions',
+    name: 'mapSoundEffect',
+    zh: '新增地圖音效',
+    params: [
+      { name: 'actorId', type: 'string', value: '' },
+      { name: 'x', type: 'int|string', value: '0' },
+      { name: 'y', type: 'int|string', value: '0' },
+      { name: 'resource', type: 'string', value: '' },
+      { name: 'volume', type: 'int|string', value: '1' },
+    ],
+  },
+  {
+    scope: 'actions',
     name: 'mapWarp',
     zh: '設定地圖傳送點',
     params: [
